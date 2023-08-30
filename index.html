@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<!-- saved from url=(0033)https://syang1993.github.io/glow_wavegan/ -->
+<html lang="en-US"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+
+<!-- Begin Jekyll SEO tag v2.7.1 -->
+<title>CMDF-TTS：Rapid and high-quality text-to-speech method with limited target speaker data</title>
+<meta name="generator" content="Jekyll v3.9.0">
+<meta property="og:title" content="Learning Speech Representations from GAN-based Auto-encoder For High Fidelity Flow-based Speech Synthesis">
+<meta property="og:locale" content="en_US">
+<link rel="canonical" href="https://syang1993.github.io/glow_wavegan/">
+<meta property="og:url" content="https://syang1993.github.io/glow_wavegan/">
+<meta name="twitter:card" content="summary">
+<!-- End Jekyll SEO tag -->
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#157878">
+    <link rel="stylesheet" href="style.css">
+  </head>
+  <body data-new-gr-c-s-check-loaded="14.1001.0" data-gr-ext-installed="">
+    <section class="page-header">
+    <h1 class="project-name">CMDF-TTS：Rapid and high-quality text-to-speech method with limited target speaker data</h1>
+    <!-- <h2 class="project-tagline"></h2> -->
+
+
+    </section>
+
+    <section class="main-content">
+      <!-- <h1 id=""><center></center></h1> -->
+
+<!--<center> Jian Cong<sup>1</sup>, Shan Yang<sup>2</sup>, Lei Xie<sup>1</sup>, Dan Su<sup>2</sup> </center>-->
+<!--<center> <sup>1</sup> Audio, Speech and Language Processing Group (ASLP@NPU), School of Computer Science, Northwestern Polytechnical University, Xi'an, China</center>-->
+<!--<center> <sup>2</sup> Tencent AI Lab, China</center>-->
+
+
+<h2 id="abstract">Abstract</h2>
+<p>While end-to-end text-to-speech (TTS) methods with limited target speaker corpus can generate high-quality speech, they often require a substantial amount of non-target speaker corpus (auxiliary corpus) to train the TTS model, leading to a significant increase in training costs. In this work, we propose a novel, efficient approach for speech synthesis with a limited target speaker corpus, which reduces the costs of training, requiring few target speaker recordings. This strategy enables expedited model training, reducing the cost of speech synthesis. Initially, we implement corpus compression on an auxiliary corpus, serving to reduce the requisite training time. Subsequently, we train the proposed non-autoregressive model CMDF-TTS using the compressed auxiliary corpus. To mitigate quality degradation in the synthesized speech, resulting from the corpus compression, we integrate multi-level prosody modeling and use denoising diffusion probabilistic models (DDPMs) as decoders for generating mel-spectrograms. Furthermore, to incorporate the characteristics of the target speaker into the model, we perform fine-tuning using the target speaker corpus. Finally, we employ conditional variational auto-encoder generative adversarial networks (CVAE-GAN) for additional fine-tuning, further enhancing the naturalness of the synthesized speech. We validate the effectiveness of our proposed method through extensive experiments on Mandarin and English corpora. The results indicate that our approach effectively balances model training speed with synthesized speech quality, outperforming current state-of-the-art models.</p>
+
+<h2><p class="toc_title">Contents</p></h2>
+<div id="toc_container">
+<ul>
+  <li><a href="#1">Effectiveness of Algorithm 1</a></li>
+  <li><a href="#2">Fine-tuning study with GANs</a></li>
+  <li><a href="#3">Ablation experiments</a></li>
+  <li><a href="#4">Contrast experiments</a></li>
+</ul>
+<!--Annotation: The <b>inner-GAN</b> indicates that the decoder in our VAE and the discriminators are used as a GAN-based vocoder, which receives Mel-spectrum as input. <b>WaveGAN</b> means the VAE + GAN model, which can be used to reconstruct input speech.-->
+</div>
+<br>
+<br>
+
+<a name="1"><h2>1. Effectiveness of Algorithm 1</h2></a>
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: center;"><div style="width: 110px;"></div></th>
+      <th style="text-align: center;"><div class="text-row1"><strong>Compressed Ratio: 0</strong></div></th>
+      <th style="text-align: center;"><div class="text-row1"><strong>Compressed Ratio: 0.2</strong></div></th>
+      <th style="text-align: center;"><div class="text-row1"><strong>Compressed Ratio: 0.4</strong></div></th>
+      <th style="text-align: center;"><div class="text-row1"><strong>Compressed Ratio: 0.6</strong></div></th>
+      <th style="text-align: center;"><div class="text-row1"><strong>Compressed Ratio: 0.8</strong></div></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="width: 110px;text-align: left"><strong style="color: black;">algorithm 1<br/> (CSMSC)</strong></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin1\Effectiveness of Algorithm 1\sentence1\CSMSC_0.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin1\Effectiveness of Algorithm 1\sentence1\CSMSC_algorithm_0.2.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin1\Effectiveness of Algorithm 1\sentence1\CSMSC_algorithm_0.4.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin1\Effectiveness of Algorithm 1\sentence1\CSMSC_algorithm_0.6.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin1\Effectiveness of Algorithm 1\sentence1\CSMSC_algorithm_0.8.wav" controls="" preload=""></audio></td>
+    </tr>
+    <tr>
+      <td style="width: 110px;text-align: left"><strong style="color: black;">random<br/> (CSMSC)</strong></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin1\Effectiveness of Algorithm 1\sentence1\CSMSC_0.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin1\Effectiveness of Algorithm 1\sentence1\CSMSC_random_0.2.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin1\Effectiveness of Algorithm 1\sentence1\CSMSC_random_0.4.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin1\Effectiveness of Algorithm 1\sentence1\CSMSC_random_0.6.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin1\Effectiveness of Algorithm 1\sentence1\CSMSC_random_0.8.wav" controls="" preload=""></audio></td>
+    </tr>
+    <tr>
+      <td colspan="1" style="text-align: right; color: black;">
+        <div >
+          Text: 
+        </div>
+      </td>
+      <td colspan="5" style="text-align: left; color: black;">
+        <div>
+          算命其实只是人们的一种自我安慰和自我暗示而已，我们还是要相信科学才好。
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td style="width: 110px;text-align: left"><strong style="color: black;">algorithm 1<br/> (CSMSC)</strong></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin1\Effectiveness of Algorithm 1\sentence2\CSMSC_0.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin1\Effectiveness of Algorithm 1\sentence2\CSMSC_algorithm_0.2.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin1\Effectiveness of Algorithm 1\sentence2\CSMSC_algorithm_0.4.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin1\Effectiveness of Algorithm 1\sentence2\CSMSC_algorithm_0.6.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin1\Effectiveness of Algorithm 1\sentence2\CSMSC_algorithm_0.8.wav" controls="" preload=""></audio></td>
+    </tr>
+    <tr>
+      <td style="width: 110px;text-align: left"><strong style="color: black;">random<br/> (CSMSC)</strong></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin1\Effectiveness of Algorithm 1\sentence2\CSMSC_0.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin1\Effectiveness of Algorithm 1\sentence2\CSMSC_random_0.2.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin1\Effectiveness of Algorithm 1\sentence2\CSMSC_random_0.4.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin1\Effectiveness of Algorithm 1\sentence2\CSMSC_random_0.6.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin1\Effectiveness of Algorithm 1\sentence2\CSMSC_random_0.8.wav" controls="" preload=""></audio></td>
+    </tr>
+    <tr>
+      <td colspan="1" style="text-align: right; color: black;">
+        <div >
+          Text: 
+        </div>
+      </td>
+      <td colspan="5" style="text-align: left; color: black;">
+        <div>
+          中南大学一校友向母校捐赠6亿元人民币，用于支持学校人才培养、学科建设与科学研究。
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td style="width: 110px;text-align: left"><strong style="color: black;">algorithm 1<br/> (CSS10)</strong></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin2\Effectiveness of Algorithm 1\sentence1\CSS10_0.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin2\Effectiveness of Algorithm 1\sentence1\CSS10_algorithm_0.2.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin2\Effectiveness of Algorithm 1\sentence1\CSS10_algorithm_0.4.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin2\Effectiveness of Algorithm 1\sentence1\CSS10_algorithm_0.6.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin2\Effectiveness of Algorithm 1\sentence1\CSS10_algorithm_0.8.wav" controls="" preload=""></audio></td>
+    </tr>
+    <tr>
+      <td style="width: 110px;text-align: left"><strong style="color: black;">random<br/> (CSS10)</strong></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin2\Effectiveness of Algorithm 1\sentence1\CSS10_0.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin2\Effectiveness of Algorithm 1\sentence1\CSS10_random_0.2.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin2\Effectiveness of Algorithm 1\sentence1\CSS10_random_0.4.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin2\Effectiveness of Algorithm 1\sentence1\CSS10_random_0.6.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin2\Effectiveness of Algorithm 1\sentence1\CSS10_random_0.8.wav" controls="" preload=""></audio></td>
+    </tr>
+    <tr>
+      <td colspan="1" style="text-align: right; color: black;">
+        <div >
+          Text: 
+        </div>
+      </td>
+      <td colspan="5" style="text-align: left; color: black;">
+        <div>
+          赛事门票销售较为火爆，热门项目门票一经推出即售罄。
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td style="width: 110px;text-align: left"><strong style="color: black;">algorithm 1<br/> (CSS10)</strong></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin2\Effectiveness of Algorithm 1\sentence2\CSS10_0.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin2\Effectiveness of Algorithm 1\sentence2\CSS10_algorithm_0.2.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin2\Effectiveness of Algorithm 1\sentence2\CSS10_algorithm_0.4.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin2\Effectiveness of Algorithm 1\sentence2\CSS10_algorithm_0.6.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin2\Effectiveness of Algorithm 1\sentence2\CSS10_algorithm_0.8.wav" controls="" preload=""></audio></td>
+    </tr>
+    <tr>
+      <td style="width: 110px;text-align: left"><strong style="color: black;">random<br/> (CSS10)</strong></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin2\Effectiveness of Algorithm 1\sentence2\CSS10_0.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin2\Effectiveness of Algorithm 1\sentence2\CSS10_random_0.2.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin2\Effectiveness of Algorithm 1\sentence2\CSS10_random_0.4.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin2\Effectiveness of Algorithm 1\sentence2\CSS10_random_0.6.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin2\Effectiveness of Algorithm 1\sentence2\CSS10_random_0.8.wav" controls="" preload=""></audio></td>
+    </tr>
+    <tr>
+      <td colspan="1" style="text-align: right; color: black;">
+        <div >
+          Text: 
+        </div>
+      </td>
+      <td colspan="5" style="text-align: left; color: black;">
+        <div>
+          以金砖责任应对共同挑战,以金砖担当开创美好未来,共同驶向现代化的彼岸。
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td style="width: 110px;text-align: left"><strong style="color: black;">algorithm 1<br/> (Ljspeech)</strong></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech/English/Effectiveness of Algorithm 1/sentence1/ljspeech_0.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech/English/Effectiveness of Algorithm 1/sentence1/ljspeech_algorithm_0.2.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech/English/Effectiveness of Algorithm 1/sentence1/ljspeech_algorithm_0.4.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech/English/Effectiveness of Algorithm 1/sentence1/ljspeech_algorithm_0.6.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech/English/Effectiveness of Algorithm 1/sentence1/ljspeech_algorithm_0.8.wav" controls="" preload=""></audio></td>
+    </tr>
+    <tr>
+      <td style="width: 110px;text-align: left"><strong style="color: black;">random<br/> (Ljspeech)</strong></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech/English/Effectiveness of Algorithm 1/sentence1/ljspeech_0.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech/English/Effectiveness of Algorithm 1/sentence1/ljspeech_random_0.2.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech/English/Effectiveness of Algorithm 1/sentence1/ljspeech_random_0.4.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech/English/Effectiveness of Algorithm 1/sentence1/ljspeech_random_0.6.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech/English/Effectiveness of Algorithm 1/sentence1/ljspeech_random_0.8.wav" controls="" preload=""></audio></td>
+    </tr>
+    <tr>
+      <td colspan="1" style="text-align: right; color: black;">
+        <div >
+          Text: 
+        </div>
+      </td>
+      <td colspan="5" style="text-align: left; color: black;">
+        <div>
+          Lack of adequate resources is an unacceptable excuse for failing to improve advance precautions.
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td style="width: 110px;text-align: left"><strong style="color: black;">algorithm 1<br/> (Ljspeech)</strong></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech/English/Effectiveness of Algorithm 1/sentence2/ljspeech_0.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech/English/Effectiveness of Algorithm 1/sentence2/ljspeech_algorithm_0.2.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech/English/Effectiveness of Algorithm 1/sentence2/ljspeech_algorithm_0.4.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech/English/Effectiveness of Algorithm 1/sentence2/ljspeech_algorithm_0.6.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech/English/Effectiveness of Algorithm 1/sentence2/ljspeech_algorithm_0.8.wav" controls="" preload=""></audio></td>
+    </tr>
+    <tr>
+      <td style="width: 110px;text-align: left"><strong style="color: black;">random<br/> (Ljspeech)</strong></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech/English/Effectiveness of Algorithm 1/sentence2/ljspeech_0.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech/English/Effectiveness of Algorithm 1/sentence2/ljspeech_random_0.2.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech/English/Effectiveness of Algorithm 1/sentence2/ljspeech_random_0.4.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech/English/Effectiveness of Algorithm 1/sentence2/ljspeech_random_0.6.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech/English/Effectiveness of Algorithm 1/sentence2/ljspeech_random_0.8.wav" controls="" preload=""></audio></td>
+    </tr>
+    <tr>
+      <td colspan="1" style="text-align: right; color: black;">
+        <div >
+          Text: 
+        </div>
+      </td>
+      <td colspan="5" style="text-align: left; color: black;">
+        <div>
+          The plan provides for an additional 205 agents for the Secret Service. Seventeen of this number are proposed for the Protective Research Section.
+        </div>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<br>
+<a name="2"><h2>2. Fine-tuning study with GANs</h2></a>
+<!--<a name="2.1"><h3>2.1 Reconstruction to waveform from speech representations</h3></a>-->
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: center;"><div style="width: 110px;"></div></th>
+      <th style="text-align: center;"><div class="text-row1"><strong>without GAN</strong></div></th>
+      <th style="text-align: center;"><div class="text-row1"><strong>GAN</strong></div></th>
+      <th style="text-align: center;"><div class="text-row1"><strong>LS-GAN</strong></div></th>
+      <th style="text-align: center;"><div class="text-row1"><strong>cGAN</strong></div></th>
+      <th style="text-align: center;"><div class="text-row1"><strong>CVAE-GAN</strong></div></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="width: 110px;text-align: left" rowspan="4"><strong style="color: black;">CSMSC</strong></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin1\Fine-tuning study with GANs\sentence1\CSMSC_withoutGAN.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin1\Fine-tuning study with GANs\sentence1\CSMSC_GAN.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin1\Fine-tuning study with GANs\sentence1\CSMSC_LS-GAN.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin1\Fine-tuning study with GANs\sentence1\CSMSC_cGAN.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin1\Fine-tuning study with GANs\sentence1\CSMSC_CVAE-GAN.wav" controls="" preload=""></audio></td>
+    </tr>
+    <tr>
+      <td colspan="6" style="text-align: left; color: black;">
+        <div>
+          Text: 金砖国家是一个具有包容性的组织，一直以来都愿意与更广泛的国际社会进行对话。
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <!-- <td style="width: 110px;text-align: left" rowspan="2"><strong style="color: black;">CSMSC</strong></td> -->
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin1\Fine-tuning study with GANs\sentence2\CSMSC_withoutGAN.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin1\Fine-tuning study with GANs\sentence2\CSMSC_GAN.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin1\Fine-tuning study with GANs\sentence2\CSMSC_LS-GAN.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin1\Fine-tuning study with GANs\sentence2\CSMSC_cGAN.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin1\Fine-tuning study with GANs\sentence2\CSMSC_CVAE-GAN.wav" controls="" preload=""></audio></td>
+    </tr>
+    <tr>
+      <td colspan="6" style="text-align: left; color: black;">
+        <div>
+          Text: 推行高中教育免学费政策旨在促进教育公平，让更多人受益。
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td style="width: 110px;text-align: left" rowspan="4"><strong style="color: black;">CSS10</strong></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin2\Fine-tuning study with GANs\sentence3\CSS10_withoutGAN.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin2\Fine-tuning study with GANs\sentence3\CSS10_GAN.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin2\Fine-tuning study with GANs\sentence3\CSS10_LS-GAN.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin2\Fine-tuning study with GANs\sentence3\CSS10_cGAN.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin2\Fine-tuning study with GANs\sentence3\CSS10_CVAE-GAN.wav" controls="" preload=""></audio></td>
+    </tr>
+    <tr>
+      <td colspan="6" style="text-align: left; color: black;">
+        <div>
+         Text: 学校、家庭和社会应共同努力，加强情感教育的普及与实施，提高年轻人的情感表达和理解能力。
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <!-- <td style="width: 110px;text-align: left" rowspan="2"><strong style="color: black;">CSS10</strong></td> -->
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin2\Fine-tuning study with GANs\sentence4\CSS10_withoutGAN.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin2\Fine-tuning study with GANs\sentence4\CSS10_GAN.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin2\Fine-tuning study with GANs\sentence4\CSS10_LS-GAN.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin2\Fine-tuning study with GANs\sentence4\CSS10_cGAN.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin2\Fine-tuning study with GANs\sentence4\CSS10_CVAE-GAN.wav" controls="" preload=""></audio></td>
+    </tr>
+    <tr>
+      <td colspan="6" style="text-align: left; color: black;">
+        <div>
+            Text: 二敬家住北五环外，上班要去亚运村华堂商场。
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td style="width: 110px;text-align: left" rowspan="4"><strong style="color: black;">Ljspeech</strong></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech/English/Fine-tuning study with GANs/sentence1/ljspeech_withoutGAN.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech/English/Fine-tuning study with GANs/sentence1/ljspeech_GAN.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech/English/Fine-tuning study with GANs/sentence1/ljspeech_LS-GAN.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech/English/Fine-tuning study with GANs/sentence1/ljspeech_cGAN.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech/English/Fine-tuning study with GANs/sentence1/ljspeech_CVAE-GAN.wav" controls="" preload=""></audio></td>
+    </tr>
+    <tr>
+      <td colspan="6" style="text-align: left; color: black;">
+        <div>
+          Text: Once the set goals, do not reach the goal not to give up, to be successful.
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech/English/Fine-tuning study with GANs/sentence3/ljspeech_withoutGAN.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech/English/Fine-tuning study with GANs/sentence3/ljspeech_GAN.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech/English/Fine-tuning study with GANs/sentence3/ljspeech_LS-GAN.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech/English/Fine-tuning study with GANs/sentence3/ljspeech_cGAN.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech/English/Fine-tuning study with GANs/sentence3/ljspeech_CVAE-GAN.wav" controls="" preload=""></audio></td>
+    </tr>
+    <tr>
+      <td colspan="6" style="text-align: left; color: black;">
+        <div>
+          Text: Start of autumn reflects the end of summer and the beginning of autumn.
+        </div>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<br>
+<a name="3"><h2>3. Ablation experiments</h2></a> 
+<!--<a name="2.1"><h3>2.1 Reconstruction to waveform from speech representations</h3></a>-->
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: center;"><div style="width: 110px;"></div></th>
+      <th style="text-align: center;"><div class="text-row1"><strong>B</strong></div></th>
+      <th style="text-align: center;"><div class="text-row1"><strong>B+MD</strong></div></th>
+      <th style="text-align: center;"><div class="text-row1"><strong>B+FN</strong></div></th>
+      <th style="text-align: center;"><div class="text-row1"><strong>B+MD+FN</strong></div></th>
+      <th style="text-align: center;"><div class="text-row1"><strong>B+C</strong></div></th>
+      <th style="text-align: center;"><div class="text-row1"><strong>B+C+MD</strong></div></th>
+	  <th style="text-align: center;"><div class="text-row1"><strong>B+C+FN</strong></div></th>
+      <th style="text-align: center;"><div class="text-row1"><strong>B+C+MD+FN</strong></div></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="width: 110px;text-align: left" rowspan="2"><strong style="color: black;">CSMSC</strong></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin1\Ablation experiments\sentence1\B.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin1\Ablation experiments\sentence1\B+MD.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin1\Ablation experiments\sentence1\B+FN.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin1\Ablation experiments\sentence1\B+MD+FN.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin1\Ablation experiments\sentence1\B+C.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin1\Ablation experiments\sentence1\B+C+MD.wav" controls="" preload=""></audio></td>
+	   <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin1\Ablation experiments\sentence1\B+C+FN.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin1\Ablation experiments\sentence1\B+C+MD+FN.wav" controls="" preload=""></audio></td>
+    </tr>
+    <tr>
+      <td colspan="8" style="text-align: left; color: black;">
+        <div>
+          Text: 十分果断地捡起一旁小花园浇花用的水龙头。
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td style="width: 110px;text-align: left" rowspan="2"><strong style="color: black;">CSMSC</strong></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin1\Ablation experiments\sentence2/B.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin1\Ablation experiments\sentence2\B+MD.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin1\Ablation experiments\sentence2\B+FN.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin1\Ablation experiments\sentence2\B+MD+FN.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin1\Ablation experiments\sentence2\B+C.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin1\Ablation experiments\sentence2\B+C+MD.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin1\Ablation experiments\sentence2\B+C+FN.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin1\Ablation experiments\sentence2\B+C+MD+FN.wav" controls="" preload=""></audio></td>
+    
+    </tr>
+    <tr>
+      <td colspan="8" style="text-align: left; color: black;">
+        <div>
+          Text: 还非法燃放烟花爆竹，引起了火灾。
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td style="width: 110px;text-align: left" rowspan="2"><strong style="color: black;">CSS10</strong></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin2\Ablation experiments\sentence3\B.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin2\Ablation experiments\sentence3\B+MD.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin2\Ablation experiments\sentence3\B+FN.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin2\Ablation experiments\sentence3\B+MD+FN.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin2\Ablation experiments\sentence3\B+C.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin2\Ablation experiments\sentence3\B+C+MD.wav" controls="" preload=""></audio></td>
+	  <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin2\Ablation experiments\sentence3\B+C+FN.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin2\Ablation experiments\sentence3\B+C+MD+FN.wav" controls="" preload=""></audio></td>
+    </tr>
+    <tr>
+      <td colspan="8" style="text-align: left; color: black;">
+        <div>
+          Text: 不过，有了大致的框架，暂时也足够了。
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td style="width: 110px;text-align: left" rowspan="2"><strong style="color: black;">CSS10</strong></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin2\Ablation experiments\sentence4\B.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin2\Ablation experiments\sentence4\B+MD.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin2\Ablation experiments\sentence4\B+FN.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin2\Ablation experiments\sentence4\B+MD+FN.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin2\Ablation experiments\sentence4\B+C.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin2\Ablation experiments\sentence4\B+C+MD.wav" controls="" preload=""></audio></td>
+	  <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin2\Ablation experiments\sentence4\B+C+FN.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin2\Ablation experiments\sentence4\B+C+MD+FN.wav" controls="" preload=""></audio></td>
+    </tr>
+    <tr>
+      <td colspan="8" style="text-align: left; color: black;">
+        <div>
+          Text: 而与此同时，检查室内，所有不相关的人，都被请了出去。
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td style="width: 110px;text-align: left" rowspan="2"><strong style="color: black;">Ljspeech</strong></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech/English/Ablation experiments/sentence1/B.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech/English/Ablation experiments/sentence1/B+MD.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech/English/Ablation experiments/sentence1/B+FN.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech/English/Ablation experiments/sentence1/B+MD+FN.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech/English/Ablation experiments/sentence1/B+C.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech/English/Ablation experiments/sentence1/B+C+MD.wav" controls="" preload=""></audio></td>
+	  <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech/English/Ablation experiments/sentence1/B+C+FN.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech/English/Ablation experiments/sentence1/B+C+MD+FN.wav" controls="" preload=""></audio></td>
+    </tr>
+    <tr>
+      <td colspan="8" style="text-align: left; color: black;">
+        <div>
+          Text: After her retirement, the author has decided to set up a tiny college in her hometown.
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td style="width: 110px;text-align: left" rowspan="2"><strong style="color: black;">Ljspeech</strong></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech/English/Ablation experiments/sentence2/B.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech/English/Ablation experiments/sentence2/B+MD.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech/English/Ablation experiments/sentence2/B+FN.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech/English/Ablation experiments/sentence2/B+MD+FN.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech/English/Ablation experiments/sentence2/B+C.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech/English/Ablation experiments/sentence2/B+C+MD.wav" controls="" preload=""></audio></td>
+	  <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech/English/Ablation experiments/sentence2/B+C+FN.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech/English/Ablation experiments/sentence2/B+C+MD+FN.wav" controls="" preload=""></audio></td>
+    </tr>
+    <tr>
+      <td colspan="8" style="text-align: left; color: black;">
+        <div>
+          Text: Life is just a series of trying to make up your mind.
+        </div>
+      </td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<br>
+<a name="4"><h2>4. Contrast experiments</h2></a>
+<!--<a name="2.1"><h3>2.1 Reconstruction to waveform from speech representations</h3></a>-->
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: center;"><div style="width: 110px;"></div></th>
+      <!-- <th style="text-align: center;"><div class="text-row1"><strong>Ground Truth</strong></div></th> -->
+      <th style="text-align: center;"><div class="text-row1"><strong>Tacotron2</strong></div></th>
+      <th style="text-align: center;"><div class="text-row1"><strong>TransformerTTS</strong></div></th>
+      <th style="text-align: center;"><div class="text-row1"><strong>FastSpeech2</strong></div></th>
+      <th style="text-align: center;"><div class="text-row1"><strong>VITS</strong></div></th>
+	  <th style="text-align: center;"><div class="text-row1"><strong>JETS</strong></div></th>
+	  <th style="text-align: center;"><div class="text-row1"><strong>ProDiff</strong></div></th>
+	  <th style="text-align: center;"><div class="text-row1"><strong>Our Method</strong></div></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="width: 110px;text-align: left" rowspan="2"><strong style="color: black;">CSMSC</strong></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin1\Contrast experiments\sentence5\Tacotron2.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin1\Contrast experiments\sentence5\TransformerTTS.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin1\Contrast experiments\sentence5\FastSpeech2.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin1\Contrast experiments\sentence5\VITS.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin1\Contrast experiments\sentence5\JETS.wav" controls="" preload=""></audio></td>
+	  <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin1\Contrast experiments\sentence5\ProDiff.wav" controls="" preload=""></audio></td>
+	  <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin1\Contrast experiments\sentence5\CMDF-TTS.wav" controls="" preload=""></audio></td>
+    </tr>
+    <tr>
+      <td colspan="7" style="text-align: left; color: black;">
+        <div>
+          Text: 这不就是和将死之人有关的消息吗？
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td style="width: 110px;text-align: left" rowspan="2"><strong style="color: black;">CSMSC</strong></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin1\Contrast experiments\sentence6\Tacotron2.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin1\Contrast experiments\sentence6\TransformerTTS.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin1\Contrast experiments\sentence6\FastSpeech2.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin1\Contrast experiments\sentence6\VITS.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin1\Contrast experiments\sentence6\JETS.wav" controls="" preload=""></audio></td>
+	  <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin1\Contrast experiments\sentence6\ProDiff.wav" controls="" preload=""></audio></td>
+	  <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin1\Contrast experiments\sentence6\CMDF-TTS.wav" controls="" preload=""></audio></td>
+    </tr>
+    <tr>
+      <td colspan="7" style="text-align: left; color: black;">
+        <div>
+          Text: 准备敷衍地看一眼，就告诉他不满意。
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td style="width: 110px;text-align: left" rowspan="2"><strong style="color: black;">CSS10</strong></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin2\Contrast experiments\sentence10\Tacotron2.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin2\Contrast experiments\sentence10\TransformerTTS.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin2\Contrast experiments\sentence10\FastSpeech2.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin2\Contrast experiments\sentence10\VITS.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin2\Contrast experiments\sentence10\JETS.wav" controls="" preload=""></audio></td>
+	  <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin2\Contrast experiments\sentence10\ProDiff.wav" controls="" preload=""></audio></td>
+	  <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin2\Contrast experiments\sentence10\CMDF-TTS.wav" controls="" preload=""></audio></td>
+    </tr>
+    <tr>
+      <td colspan="7" style="text-align: left; color: black;">
+        <div>
+          Text: 这一次，他多么希望是他自己猜错了。
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td style="width: 110px;text-align: left" rowspan="2"><strong style="color: black;">CSS10</strong></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin2\Contrast experiments\sentence8\Tacotron2.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin2\Contrast experiments\sentence8\TransformerTTS.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin2\Contrast experiments\sentence8\FastSpeech2.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin2\Contrast experiments\sentence8\VITS.wav" controls="" preload=""></audio></td>
+      <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin2\Contrast experiments\sentence8\JETS.wav" controls="" preload=""></audio></td>
+	  <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin2\Contrast experiments\sentence8\ProDiff.wav" controls="" preload=""></audio></td>
+	  <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech\Mandarin2\Contrast experiments\sentence8\CMDF-TTS.wav" controls="" preload=""></audio></td>
+    </tr>
+    <tr>
+      <td colspan="7" style="text-align: left; color: black;">
+        <div>
+          Text: 只能拿出手机，靠处理文件去分散自己的注意力。
+        </div>
+      </td>
+    </tr>
+	<tr>
+	 <td style="width: 110px;text-align: left" rowspan="2"><strong style="color: black;">Ljspeech</strong></td>
+	 <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech/English/Contrast experiments/sentence4/Tacotron2.wav" controls="" preload=""></audio></td>
+	 <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech/English/Contrast experiments/sentence4/TransformerTTS.wav" controls="" preload=""></audio></td>
+	 <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech/English/Contrast experiments/sentence4/FastSpeech2.wav" controls="" preload=""></audio></td>
+	 <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech/English/Contrast experiments/sentence4/VITS.wav" controls="" preload=""></audio></td>
+	 <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech/English/Contrast experiments/sentence4/JETS.wav" controls="" preload=""></audio></td>
+	 <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech/English/Contrast experiments/sentence4/ProDiff.wav" controls="" preload=""></audio></td>
+	 <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech/English/Contrast experiments/sentence4/CMDF-TTS.wav" controls="" preload=""></audio></td>
+	</tr>
+	<tr>
+	 <td colspan="7" style="text-align: left; color: black;">
+	   <div>
+		 Text: She is always finding fault with the work of her secretary.
+	   </div>
+	 </td>
+	</tr>
+	<tr>
+	 <td style="width: 110px;text-align: left" rowspan="2"><strong style="color: black;">Ljspeech</strong></td>
+	 <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech/English/Contrast experiments/sentence5/Tacotron2.wav" controls="" preload=""></audio></td>
+	 <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech/English/Contrast experiments/sentence5/TransformerTTS.wav" controls="" preload=""></audio></td>
+	 <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech/English/Contrast experiments/sentence5/FastSpeech2.wav" controls="" preload=""></audio></td>
+	 <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech/English/Contrast experiments/sentence5/VITS.wav" controls="" preload=""></audio></td>
+	 <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech/English/Contrast experiments/sentence5/JETS.wav" controls="" preload=""></audio></td>
+	 <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech/English/Contrast experiments/sentence5/ProDiff.wav" controls="" preload=""></audio></td>
+	 <td style="width: 234px;text-align: left"><audio controlsList="nodownload" style="width: 234px;" src="speech/English/Contrast experiments/sentence5/CMDF-TTS.wav" controls="" preload=""></audio></td>
+	</tr>
+	<tr>
+	 <td colspan="7" style="text-align: left; color: black;">
+	   <div>
+		 Text: You should take hold of the rope until you reach the ground.
+	   </div>
+	 </td>
+	</tr>
+  </tbody>
+</table>
+<br>
+     <!-- <footer class="site-footer">
+        <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com/">GitHub Pages</a>.</span>
+      </footer> -->
+    </section>
+</body>
+</html>
