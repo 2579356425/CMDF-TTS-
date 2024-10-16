@@ -4,7 +4,7 @@
 
 
 <!-- Begin Jekyll SEO tag v2.7.1 -->
-<title>CMDF-TTS: Text-to-Speech Method With Limited Target Speaker Data</title>
+<title>CMDF-TTS: Text-to-Speech Method with Limited Target Speaker Corpus</title>
 <meta name="generator" content="Jekyll v3.9.0">
 <meta property="og:title" content="Learning Speech Representations from GAN-based Auto-encoder For High Fidelity Flow-based Speech Synthesis">
 <meta property="og:locale" content="en_US">
@@ -19,7 +19,7 @@
   </head>
   <body data-new-gr-c-s-check-loaded="14.1001.0" data-gr-ext-installed="">
     <section class="page-header">
-    <h1 class="project-name">CMDF-TTS: Text-to-Speech Method With Limited Target Speaker Data</h1>
+    <h1 class="project-name">CMDF-TTS: Text-to-Speech Method with Limited Target Speaker Corpus</h1>
     <!-- <h2 class="project-tagline"></h2> -->
 
 
@@ -34,7 +34,7 @@
 
 
 <h2 id="abstract">Abstract</h2>
-<p>While end-to-end Text-to-Speech (TTS) methods with limited target speaker corpus can generate high-quality speech, they often require a non-target speaker corpus (auxiliary corpus) which contains a substantial amount of <text, speech> pairs to train the model, significantly increasing training costs. In this work, we propose a fast and high-quality speech synthesis approach, requiring few target speaker recordings. Based on statistics, we analyze the role of phonemes, function words, and sentence target domains in the corpus and propose an algorithm to compress the corpus accordingly. It significantly improves model training speed without a noticeable decrease in speech naturalness. Next, we use the compressed corpus to train the proposed non-autoregressive model CMDF-TTS, which uses a multi-level prosody modeling module to obtain more information and denoising diffusion probabilistic models (DDPMs) to generate mel-spectrograms. Besides, we fine-tune the model using the target speaker corpus to embed the speaker's characteristics into the model and conditional variational auto-encoder generative adversarial networks (CVAE-GAN) to further enhance the synthesized speech's quality. The experimental results on Mandarin and English corpora indicate that our approach effectively balances model training speed with synthesized speech quality, outperforming state-of-the-art models.</p>
+<p>While end-to-end Text-to-Speech (TTS) methods with limited target speaker corpus can generate high-quality speech, they often require a non-target speaker corpus (auxiliary corpus) which contains a substantial amount of <text, speech> pairs to train the model, significantly increasing training costs. In this work, we propose a fast and high-quality speech synthesis approach, requiring few target speaker recordings. Based on statistics, we analyzed the role of phonemes, function words, and utterance target domains in the corpus and proposed a Statistical-based Compression Auxiliary Corpus algorithm (SCAC). It significantly improves model training speed without a noticeable decrease in speech naturalness. Next, we use the compressed corpus to train the proposed non-autoregressive model CMDF-TTS, which uses a multi-level prosody modeling module to obtain more information and Denoising Diffusion Probabilistic Models (DDPMs) to generate mel-spectrograms. Besides, we fine-tune the model using the target speaker corpus to embed the speaker's characteristics into the model and Conditional Variational Auto-Encoder Generative Adversarial Networks(CVAE-GAN) to enhance further the synthesized speech's quality. Experimental results on multiple Mandarin and English corpora demonstrate that the CMDF-TTS model, enhanced by the SCAC algorithm, effectively balances training speed and synthesized speech quality. Overall, its performance surpasses that of state-of-the-art models.</p>
 
 <h2><p class="toc_title">Contents</p></h2>
 <div id="toc_container">
